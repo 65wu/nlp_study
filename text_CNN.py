@@ -1,9 +1,12 @@
 import random
 import jieba
 import pandas as pd
+import xgboost as xgb
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.svm import SVC
+
 
 dir_file = "Users/Downloads/"
 husband_file = "killed_by_husband.csv"
@@ -79,7 +82,8 @@ random.shuffle(sentences)
 # 抽取特征，获得词袋模型特性
 vec = CountVectorizer(
     analyzer="word",
-    max_features=4000
+    ngram_range=(1, 4),
+    max_features=20000
 )
 
 x, y = zip(*sentences)
@@ -93,8 +97,34 @@ classifier = MultinomialNB()
 classifier.fit(vec.transform(x_train), y_train)
 
 # 评估AUC值
-print(classifier.score(vec.transform(x_test), y_test))
+# print(classifier.score(vec.transform(x_test), y_test))
 
+# 使用SVM训练
+svm = SVC(kernel="linear")
+svm.fit(vec.transform(x_train), y_train)
+print(svm.score(vec.transform(x_test), y_test))
+
+xgb_train = xgb.DMatrix(vec.transform(x_train), label=y_train)
+xgb_test = xgb.DMatrix(vec.transform(x_test))
+
+params = {
+    "booster": "gbtree",
+    "objective": "multi:softmax",
+    "eval_metric": "merror",
+    "num_class": 4,
+    "gamma": 0.1,
+    "max_depth": 8,
+    "alpha": 0,
+    "lambda": 10,
+    "subsample": 0.7,
+    "colsample_bytree": 0.5,
+    "min_child_weight": 3,
+    "silent": 0,
+    "eta": 0.03,
+    "seed": 1000,
+    "nthread": -1,
+    "missing": 1
+}
 
 
 
