@@ -1,7 +1,9 @@
 import random
 import jieba
 import pandas as pd
-
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
 
 dir_file = "Users/Downloads/"
 husband_file = "killed_by_husband.csv"
@@ -67,6 +69,33 @@ content = [husband, wife, son, daughter]
 # 分类语料并批量添加到sentences
 for value in content:
     preprocess_text(value, sentences, content.index(value))
+
+# 打乱数据集顺序，避免同类数据分布不均匀
+random.shuffle(sentences)
+
+# for sentence in sentences[:10]:
+#     print(sentence[0], sentence[1])
+
+# 抽取特征，获得词袋模型特性
+vec = CountVectorizer(
+    analyzer="word",
+    max_features=4000
+)
+
+x, y = zip(*sentences)
+x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=1256)
+
+# 将训练向量转换为词袋模型
+vec.fit(x_train)
+
+# 定义一个朴素贝叶斯模型, 并对训练集进行训练
+classifier = MultinomialNB()
+classifier.fit(vec.transform(x_train), y_train)
+
+# 评估AUC值
+print(classifier.score(vec.transform(x_test), y_test))
+
+
 
 
 
