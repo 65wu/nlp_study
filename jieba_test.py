@@ -7,7 +7,7 @@ dir_file = "Users/Downloads/"
 husband_file = "killed_by_husband.csv"
 wife_file = "killed_by_wife.csv"
 son_file = "killed_by_son.csv"
-daughter_file = "killed_by_husband.csv"
+daughter_file = "killed_by_daughter.csv"
 
 
 # 路径添加函数
@@ -41,6 +41,35 @@ husband = df_read_csv(husband_file)
 wife = df_read_csv(wife_file)
 son = df_read_csv(son_file)
 daughter = df_read_csv(daughter_file)
+
+sentences = []
+
+
+# 定义分词和添加标签的函数preprocess_text
+# 参数content_lines为上方加载好的语料list
+# 参数sentences是暂时定义的空list
+# 参数category为类型标签
+def preprocess_text(content_lines, string, category):
+    for line in content_lines:
+        try:
+            segs = jieba.lcut(line)
+            segs = [v for v in segs if not str(v).isdigit()]  # 去数字
+            segs = list(filter(lambda x: x.strip(), segs))  # 去左右空格
+            segs = list(filter(lambda x: len(x) > 1, segs))  # 长度为1的字符
+            segs = list(filter(lambda x: x not in stop_words, segs))  # 去掉停用词
+            string.append((" ".join(segs), category))  # 打标签
+        except Exception:
+            print(line)
+            continue
+
+
+content = [husband, wife, son, daughter]
+# 分类语料并批量添加到sentences
+for value in content:
+    preprocess_text(value, sentences, content.index(value))
+
+
+
 
 
 
